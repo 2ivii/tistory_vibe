@@ -1,44 +1,106 @@
 import { Link } from "react-router-dom";
-import { PageIntro } from "../components/PageIntro";
 import { PostCard } from "../components/PostCard";
-import { getFeaturedPosts } from "../api/postApi";
+import { PostListItem } from "../components/PostListItem";
+import { getFeaturedPosts, getLatestPosts, getPopularPosts } from "../api/postApi";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 export function HomePage() {
+  usePageTitle("메인");
   const featuredPosts = getFeaturedPosts();
+  const latestPosts = getLatestPosts();
+  const popularPosts = getPopularPosts();
+  const creatorGroups = [
+    {
+      title: "스토리 크리에이터",
+      items: popularPosts
+    },
+    {
+      title: "기록보관소",
+      items: latestPosts.slice(1, 3)
+    }
+  ];
 
   return (
-    <div className="container page-stack">
-      <PageIntro
-        eyebrow="Blog Platform"
-        title="깔끔한 블로그 서비스의 시작점"
-        description="티스토리와 유사한 흐름을 가진 프론트엔드 구조를 먼저 세우고, 이후 Spring Boot REST API 연동이 자연스럽게 이어지도록 설계한 초기 화면입니다."
-      />
+    <div className="container home-page">
+      <div className="home-layout">
+        <section className="home-main">
+          <section className="spotlight-grid">
+            {featuredPosts.slice(0, 2).map((post, index) => (
+              <PostCard key={post.id} post={post} compact={index === 0} />
+            ))}
+          </section>
 
-      <section className="hero-banner">
-        <div>
-          <h2>콘텐츠 중심 구조</h2>
-          <p>메인, 인증, 글, 사용자 블로그 영역을 나눠서 확장 가능한 라우팅 기반으로 구성했습니다.</p>
-        </div>
-        <div className="hero-banner__actions">
-          <Link to="/posts" className="button primary">
-            글 목록 보기
-          </Link>
-          <Link to="/posts/new" className="button secondary">
-            글 작성 화면
-          </Link>
-        </div>
-      </section>
+          <section className="home-ranking">
+            {latestPosts.slice(0, 5).map((post, index) => (
+              <PostListItem key={post.id} post={post} rank={index + 1} showThumbnail />
+            ))}
+          </section>
+        </section>
 
-      <section className="section-stack">
-        <div className="section-heading">
-          <h2>추천 글</h2>
-          <Link to="/posts">전체 글 보기</Link>
-        </div>
-        <div className="post-grid">
-          {featuredPosts.map((post) => (
-            <PostCard key={post.id} post={post} />
+        <aside className="home-sidebar">
+          <section className="login-prompt">
+            <p>티스토리에 로그인하고 더 많은 기능을 이용해보세요!</p>
+            <button type="button" className="social-start-button">
+              카카오계정으로 시작하기
+            </button>
+          </section>
+
+          {creatorGroups.map((group) => (
+            <section key={group.title} className="creator-panel">
+              <div className="creator-panel__heading">
+                <h2>{group.title}</h2>
+                <span className="creator-panel__badge">S</span>
+              </div>
+              <div className="creator-collection">
+                {group.items.map((post) => (
+                  <div key={`${group.title}-${post.id}`} className="creator-card">
+                    <div className="creator-card__header">
+                      <div>
+                        <strong>{post.authorDisplayName}</strong>
+                        <p>
+                          {post.category} 크리에이터 · {post.likeCount * 97}명 구독
+                        </p>
+                      </div>
+                      <button type="button" className="subscribe-button">
+                        + 구독
+                      </button>
+                    </div>
+                    <div className="creator-post-list">
+                      <Link to={`/posts/${post.id}`} className="creator-post-item">
+                        <div>
+                          <strong>{post.title}</strong>
+                          <p>
+                            좋아요 {post.likeCount} · 댓글 {post.commentCount} · {post.readTime}
+                          </p>
+                        </div>
+                        <div className={`creator-post-item__thumb creator-post-item__thumb--${post.id}`} />
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
           ))}
-        </div>
+
+          <div className="sidebar-pager">
+            <button type="button" className="pager-button">
+              ‹
+            </button>
+            <span>1 / 16</span>
+            <button type="button" className="pager-button">
+              ›
+            </button>
+          </div>
+        </aside>
+      </div>
+
+      <section className="home-more-link">
+        <Link to="/posts" className="button ghost">
+          전체 글 보러가기
+        </Link>
+        <Link to="/posts/new" className="button secondary">
+          글 작성하기
+        </Link>
       </section>
     </div>
   );

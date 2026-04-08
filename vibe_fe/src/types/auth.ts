@@ -8,3 +8,13 @@ export type SignUpRequest = {
   email: string;
   password: string;
 };
+
+export type CurrentUser = {
+  nickname: string;
+  blogUsername: string;
+};
+
+export type AuthSession = {
+  isLoggedIn: boolean;
+  user: CurrentUser;
+};

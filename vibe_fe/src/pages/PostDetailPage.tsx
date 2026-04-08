@@ -1,11 +1,16 @@
 import { Link, useParams } from "react-router-dom";
-import { getPostById } from "../api/postApi";
+import { getCommentsByPostId, getPostById } from "../api/postApi";
+import { CommentPlaceholder } from "../components/CommentPlaceholder";
 import { PageIntro } from "../components/PageIntro";
+import { usePageTitle } from "../hooks/usePageTitle";
 import { formatDate } from "../utils/formatDate";
 
 export function PostDetailPage() {
   const { postId } = useParams();
   const post = getPostById(postId ?? "");
+  const comments = getCommentsByPostId(postId ?? "");
+
+  usePageTitle(post ? post.title : "글 상세");
 
   if (!post) {
     return (
@@ -22,9 +27,11 @@ export function PostDetailPage() {
   return (
     <div className="container narrow page-stack">
       <article className="detail-article card">
+        <p className="page-intro__eyebrow">{post.category}</p>
         <div className="detail-article__meta">
-          <span>{post.authorName}</span>
+          <span>{post.authorDisplayName}</span>
           <span>{formatDate(post.createdAt)}</span>
+          <span>{post.readTime}</span>
         </div>
         <h1>{post.title}</h1>
         <p className="detail-article__summary">{post.summary}</p>
@@ -40,6 +47,10 @@ export function PostDetailPage() {
             <p key={paragraph}>{paragraph}</p>
           ))}
         </div>
+        <div className="detail-article__footer">
+          <span>좋아요 {post.likeCount}</span>
+          <span>댓글 {post.commentCount}</span>
+        </div>
         <div className="form-actions">
           <Link to={`/posts/${post.id}/edit`} className="button primary">
             수정하기
@@ -49,6 +60,7 @@ export function PostDetailPage() {
           </Link>
         </div>
       </article>
+      <CommentPlaceholder comments={comments} />
     </div>
   );
 }

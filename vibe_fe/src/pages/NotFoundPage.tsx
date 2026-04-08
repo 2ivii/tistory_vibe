@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
 import { PageIntro } from "../components/PageIntro";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 export function NotFoundPage() {
+  usePageTitle("404");
+
   return (
     <div className="container narrow page-stack">
       <PageIntro
