@@ -12,5 +12,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     Page<Post> findAllByAuthor_BlogUsernameAndPublishedTrue(String blogUsername, Pageable pageable);
 
+    long countByAuthorIdAndPublishedTrue(Long authorId);
+
     Optional<Post> findByIdAndPublishedTrue(Long id);
 }
