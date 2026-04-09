@@ -13,7 +13,8 @@ const publicNavItems = [
 export function Header() {
   const navigate = useNavigate();
   const session = useAuthSession();
-  const blogUsername = session.user?.blogUsername ?? "";
+  const blogUsername = session.user?.blogUsername ?? session.user?.primaryBlogUsername ?? "";
+  const myBlogPath = blogUsername ? `/blog/${blogUsername}` : "/";
   const nickname = session.user?.nickname ?? "사용자";
   const email = session.user?.email ?? "";
   const avatarText = nickname.slice(0, 1);
@@ -24,6 +25,11 @@ export function Header() {
     setIsMenuOpen(false);
     logout();
     navigate("/");
+  }
+
+  function handleGoToMyBlog() {
+    setIsMenuOpen(false);
+    navigate(myBlogPath);
   }
 
   useEffect(() => {
@@ -105,14 +111,19 @@ export function Header() {
                     <div className="profile-dropdown__account">
                       <strong>{nickname}</strong>
                       <p>{email || `@${blogUsername}`}</p>
-                      <Link to={`/blog/${blogUsername}`} className="profile-dropdown__manage" onClick={() => setIsMenuOpen(false)}>
+                      <Link to="/account" className="profile-dropdown__manage" onClick={() => setIsMenuOpen(false)}>
                         계정관리
                       </Link>
                     </div>
                     <div className="profile-dropdown__menu">
-                      <Link to={`/blog/${blogUsername}`} className="profile-dropdown__item" role="menuitem" onClick={() => setIsMenuOpen(false)}>
+                      <button
+                        type="button"
+                        className="profile-dropdown__item profile-dropdown__item--button"
+                        role="menuitem"
+                        onClick={handleGoToMyBlog}
+                      >
                         내 블로그
-                      </Link>
+                      </button>
                       <Link to="/posts/new" className="profile-dropdown__item" role="menuitem" onClick={() => setIsMenuOpen(false)}>
                         글쓰기
                       </Link>

@@ -26,6 +26,8 @@ export type CurrentUser = {
   blogUsername: string;
   blogTitle: string;
   bio: string | null;
+  profileImageUrl: string | null;
+  primaryBlogUsername: string;
   role: string;
 };
 

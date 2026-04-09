@@ -22,6 +22,8 @@ export function HomePage() {
 
   const session = useAuthSession();
   const [posts, setPosts] = useState<PostSummary[]>([]);
+  const [myBlogProfile, setMyBlogProfile] = useState<BlogProfile | null>(null);
+  const [myBlogProfileLoading, setMyBlogProfileLoading] = useState(false);
   const [recommendedCreators, setRecommendedCreators] = useState<RecommendedCreator[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -57,6 +59,8 @@ export function HomePage() {
   const estimatedViews = myPosts.length * 137 + 24;
   const estimatedVisitors = Math.max(myPosts.length * 18, user ? 9 : 0);
   const estimatedRevenue = myPosts.length > 0 ? `₩${(myPosts.length * 3200).toLocaleString()}` : "내 수익 예측해보기";
+  const myBlogUsername = user?.blogUsername || user?.primaryBlogUsername || "";
+  const myBlogPath = myBlogUsername ? `/blog/${myBlogUsername}` : "/";
   const creatorGroups = [
     {
       title: "스토리 크리에이터",
@@ -109,6 +113,40 @@ export function HomePage() {
       active = false;
     };
   }, [posts]);
+
+  useEffect(() => {
+    if (!session.isLoggedIn || !myBlogUsername) {
+      setMyBlogProfile(null);
+      return;
+    }
+
+    let active = true;
+
+    async function loadMyBlogProfile() {
+      try {
+        setMyBlogProfileLoading(true);
+        const profile = await getBlogProfile(myBlogUsername);
+
+        if (active) {
+          setMyBlogProfile(profile);
+        }
+      } catch {
+        if (active) {
+          setMyBlogProfile(null);
+        }
+      } finally {
+        if (active) {
+          setMyBlogProfileLoading(false);
+        }
+      }
+    }
+
+    void loadMyBlogProfile();
+
+    return () => {
+      active = false;
+    };
+  }, [myBlogUsername, session.isLoggedIn]);
 
   async function handleToggleCreatorSubscription(targetUserId: number) {
     const target = recommendedCreators.find((item) => item.profile.userId === targetUserId);
@@ -212,7 +250,9 @@ export function HomePage() {
                 <div className="profile-sidebar-card__avatar">{user.nickname.slice(0, 1)}</div>
                 <div>
                   <strong className="profile-sidebar-card__name">{user.nickname}</strong>
-                  <p className="profile-sidebar-card__meta">구독자 9명</p>
+                  <p className="profile-sidebar-card__meta">
+                    {myBlogProfileLoading ? "구독자 수 불러오는 중" : `구독자 ${myBlogProfile?.subscriberCount ?? 0}명`}
+                  </p>
                 </div>
                 <button type="button" className="profile-sidebar-card__expand" aria-label="사용자 메뉴">
                   ˅
@@ -223,24 +263,24 @@ export function HomePage() {
                 <Link to="/posts/new" className="profile-sidebar-card__action">
                   글쓰기
                 </Link>
-                <Link to={`/blog/${user.blogUsername}`} className="profile-sidebar-card__action">
+                <Link to={myBlogPath} className="profile-sidebar-card__action">
                   내 블로그
                 </Link>
-                <Link to={`/blog/${user.blogUsername}`} className="profile-sidebar-card__action">
+                <Link to={myBlogPath} className="profile-sidebar-card__action">
                   관리
                 </Link>
               </div>
 
               <div className="profile-sidebar-card__stats">
-                <Link to={`/blog/${user.blogUsername}`} className="profile-stat-row">
+                <Link to={myBlogPath} className="profile-stat-row">
                   <span>조회수</span>
                   <strong>{estimatedViews.toLocaleString()}회</strong>
                 </Link>
-                <Link to={`/blog/${user.blogUsername}`} className="profile-stat-row">
+                <Link to={myBlogPath} className="profile-stat-row">
                   <span>방문자</span>
                   <strong>{estimatedVisitors.toLocaleString()}명</strong>
                 </Link>
-                <Link to={`/blog/${user.blogUsername}`} className="profile-stat-row">
+                <Link to={myBlogPath} className="profile-stat-row">
                   <span>수익</span>
                   <strong>{estimatedRevenue}</strong>
                 </Link>

@@ -113,6 +113,36 @@ export function UserBlogPage() {
         />
       ) : null}
 
+      {profile ? (
+        <section className="card blog-overview-card">
+          <div className="blog-overview-card__main">
+            <div className="section-heading">
+              <h2>{profile.isOwner ? "내 블로그 홈" : "블로그 정보"}</h2>
+              <span>@{profile.username}</span>
+            </div>
+            <p className="blog-overview-card__description">
+              {profile.blogTitle}에서 {profile.isOwner ? "작성한 글과 블로그 운영 현황" : "발행된 글과 블로그 소개"}를 확인할 수 있습니다.
+            </p>
+            <div className="blog-overview-card__tags">
+              <span className="blog-overview-card__tag">전체글 {profile.postCount}</span>
+              <span className="blog-overview-card__tag">구독자 {profile.subscriberCount}</span>
+              <span className="blog-overview-card__tag">{profile.isOwner ? "내가 운영 중" : "크리에이터 블로그"}</span>
+            </div>
+          </div>
+          <aside className="blog-overview-card__side">
+            <div className="blog-overview-card__side-block">
+              <strong>카테고리</strong>
+              <p>전체 글</p>
+              <span>{profile.postCount}개의 포스트</span>
+            </div>
+            <div className="blog-overview-card__side-block">
+              <strong>블로그 소개</strong>
+              <p>{profile.bio ?? "아직 소개글이 없습니다."}</p>
+            </div>
+          </aside>
+        </section>
+      ) : null}
+
       <section className="section-stack card blog-posts-card">
         <div className="section-heading">
           <h2>{profile?.isOwner ? "내가 작성한 글" : "최근 글"}</h2>
