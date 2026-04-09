@@ -62,4 +62,14 @@ public class Post extends BaseEntity {
         this.commentCount = 0;
         this.viewCount = 0;
     }
+
+    public void update(String title, String summary, String content) {
+        this.title = title;
+        this.summary = summary;
+        this.content = content;
+    }
+
+    public boolean isAuthor(Long userId) {
+        return author != null && author.getId().equals(userId);
+    }
 }
