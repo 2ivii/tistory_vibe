@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { createComment, deleteComment, getComments } from "../api/comments";
 import { deletePost, getPost } from "../api/posts";
-import { CommentPlaceholder } from "../components/CommentPlaceholder";
+import { CommentSection } from "../components/CommentSection";
 import { PageIntro } from "../components/PageIntro";
 import { useAuthSession } from "../hooks/useAuthSession";
 import { usePageTitle } from "../hooks/usePageTitle";
+import type { Comment } from "../types/comment";
 import type { PostDetail } from "../types/post";
 import { formatDate } from "../utils/formatDate";
 
@@ -16,6 +18,13 @@ export function PostDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(true);
+  const [commentsError, setCommentsError] = useState<string | null>(null);
+  const [commentSubmitError, setCommentSubmitError] = useState<string | null>(null);
+  const [commentDeleteError, setCommentDeleteError] = useState<string | null>(null);
+  const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
+  const [deletingCommentId, setDeletingCommentId] = useState<number | null>(null);
 
   usePageTitle(post ? post.title : "글 상세");
 
@@ -55,6 +64,43 @@ export function PostDetailPage() {
     };
   }, [postId]);
 
+  useEffect(() => {
+    let active = true;
+
+    async function loadComments() {
+      if (!postId) {
+        setComments([]);
+        setCommentsError("유효하지 않은 게시글 주소입니다.");
+        setCommentsLoading(false);
+        return;
+      }
+
+      try {
+        setCommentsLoading(true);
+        setCommentsError(null);
+        const response = await getComments(postId);
+
+        if (active) {
+          setComments(response);
+        }
+      } catch (loadError) {
+        if (active) {
+          setCommentsError(loadError instanceof Error ? loadError.message : "댓글을 불러오지 못했습니다.");
+        }
+      } finally {
+        if (active) {
+          setCommentsLoading(false);
+        }
+      }
+    }
+
+    void loadComments();
+
+    return () => {
+      active = false;
+    };
+  }, [postId]);
+
   async function handleDelete() {
     if (!postId) {
       return;
@@ -70,6 +116,61 @@ export function PostDetailPage() {
       navigate("/posts");
     } catch (deletePostError) {
       setDeleteError(deletePostError instanceof Error ? deletePostError.message : "게시글 삭제에 실패했습니다.");
+    }
+  }
+
+  async function handleCommentSubmit(content: string) {
+    if (!postId || !session.isLoggedIn) {
+      setCommentSubmitError("로그인 후 댓글을 작성할 수 있습니다.");
+      return;
+    }
+
+    try {
+      setIsCommentSubmitting(true);
+      setCommentSubmitError(null);
+      setCommentDeleteError(null);
+      const createdComment = await createComment(postId, { content });
+
+      setComments((currentComments) => [...currentComments, createdComment]);
+      setPost((currentPost) =>
+        currentPost
+          ? {
+              ...currentPost,
+              commentCount: currentPost.commentCount + 1
+            }
+          : currentPost
+      );
+    } catch (submitError) {
+      setCommentSubmitError(submitError instanceof Error ? submitError.message : "댓글 작성에 실패했습니다.");
+      throw submitError;
+    } finally {
+      setIsCommentSubmitting(false);
+    }
+  }
+
+  async function handleCommentDelete(commentId: number) {
+    try {
+      setDeletingCommentId(commentId);
+      setCommentDeleteError(null);
+      setCommentSubmitError(null);
+      await deleteComment(commentId);
+
+      setComments((currentComments) => currentComments.filter((comment) => comment.id !== commentId));
+      setPost((currentPost) =>
+        currentPost
+          ? {
+              ...currentPost,
+              commentCount: Math.max(0, currentPost.commentCount - 1)
+            }
+          : currentPost
+      );
+    } catch (commentDeleteRequestError) {
+      setCommentDeleteError(
+        commentDeleteRequestError instanceof Error ? commentDeleteRequestError.message : "댓글 삭제에 실패했습니다."
+      );
+      throw commentDeleteRequestError;
+    } finally {
+      setDeletingCommentId(null);
     }
   }
 
@@ -127,7 +228,18 @@ export function PostDetailPage() {
         </div>
         {deleteError ? <p className="helper-text">{deleteError}</p> : null}
       </article>
-      <CommentPlaceholder comments={[]} />
+      <CommentSection
+        comments={comments}
+        session={session}
+        loading={commentsLoading}
+        error={commentsError}
+        submitError={commentSubmitError}
+        deleteError={commentDeleteError}
+        isSubmitting={isCommentSubmitting}
+        deletingCommentId={deletingCommentId}
+        onSubmit={handleCommentSubmit}
+        onDelete={handleCommentDelete}
+      />
     </div>
   );
 }

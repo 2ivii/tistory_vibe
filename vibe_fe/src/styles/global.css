@@ -56,6 +56,13 @@ textarea {
   resize: vertical;
 }
 
+button:disabled,
+textarea:disabled,
+input:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .app-shell {
   min-height: 100vh;
   display: flex;
@@ -509,6 +516,58 @@ textarea {
   gap: 12px;
 }
 
+.comment-form {
+  display: grid;
+  gap: 12px;
+}
+
+.comment-form textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: var(--text-main);
+}
+
+.comment-form__footer,
+.comment-item__author,
+.comment-item__actions,
+.comment-login-notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.comment-form__footer,
+.comment-item__actions {
+  justify-content: space-between;
+}
+
+.comment-item__meta {
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.comment-item__author,
+.comment-item__actions {
+  flex-wrap: wrap;
+}
+
+.comment-item__author span {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.comment-delete-button {
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+
 .comment-item {
   border-top: 1px solid var(--line);
   padding-top: 18px;
@@ -516,6 +575,19 @@ textarea {
 
 .comment-empty {
   padding: 12px 0 0;
+}
+
+.comment-login-notice {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: var(--surface-soft);
+}
+
+.comment-login-notice p {
+  margin: 0;
+  color: var(--text-muted);
 }
 
 .blog-profile-card__identity {
