@@ -2,8 +2,7 @@ export type BlogProfile = {
   username: string;
   displayName: string;
   blogTitle: string;
-  bio: string;
-  followerCount: number;
+  bio: string | null;
   postCount: number;
-  todayVisitorCount: number;
+  isOwner: boolean;
 };

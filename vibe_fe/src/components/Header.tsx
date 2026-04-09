@@ -1,16 +1,26 @@
-import { NavLink, Link } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { logout } from "../api/authApi";
 import { useAuthSession } from "../hooks/useAuthSession";
 
-const navItems = [
+const publicNavItems = [
   { to: "/", label: "홈", end: true },
   { to: "/posts", label: "피드" },
   { to: "/blog/minlog", label: "스킨" },
-  { to: "/posts/new", label: "글쓰기" },
 ];
 
 export function Header() {
+  const navigate = useNavigate();
   const session = useAuthSession();
+  const blogUsername = session.user?.blogUsername ?? "";
+  const nickname = session.user?.nickname ?? "사용자";
+  const navItems = session.isLoggedIn
+    ? [...publicNavItems, { to: "/posts/new", label: "글쓰기" }]
+    : publicNavItems;
+
+  function handleLogout() {
+    logout();
+    navigate("/");
+  }
 
   return (
     <header className="site-header">
@@ -43,17 +53,30 @@ export function Header() {
           </div>
           {session.isLoggedIn ? (
             <div className="user-menu">
-              <Link to={`/blog/${session.user?.blogUsername ?? ""}`} className="user-menu__profile">
-                <span>{session.user?.nickname ?? "내 블로그"}</span>
+              <Link to={`/blog/${blogUsername}`} className="user-menu__profile">
+                <span className="user-menu__avatar">{nickname.slice(0, 1)}</span>
+                <span className="user-menu__text">
+                  <strong>{nickname}</strong>
+                  <small>@{blogUsername}</small>
+                </span>
               </Link>
-              <button type="button" className="button secondary" onClick={logout}>
+              <Link to={`/blog/${blogUsername}`} className="button ghost">
+                내 블로그
+              </Link>
+              <Link to="/posts/new" className="button primary">
+                글쓰기
+              </Link>
+              <button type="button" className="button secondary" onClick={handleLogout}>
                 로그아웃
               </button>
             </div>
           ) : (
             <div className="auth-actions">
+              <Link to="/signup" className="button ghost">
+                회원가입
+              </Link>
               <Link to="/login" className="button primary header-start-button">
-                시작하기
+                로그인
               </Link>
             </div>
           )}

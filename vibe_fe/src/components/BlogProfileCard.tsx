@@ -11,8 +11,11 @@ export function BlogProfileCard({ profile }: BlogProfileCardProps) {
         <div className="blog-avatar">{profile.displayName.slice(0, 1)}</div>
         <div>
           <p className="blog-profile-card__eyebrow">@{profile.username}</p>
-          <h1>{profile.blogTitle}</h1>
-          <p>{profile.bio}</p>
+          <div className="blog-profile-card__title-row">
+            <h1>{profile.blogTitle}</h1>
+            {profile.isOwner ? <span className="blog-profile-card__owner-badge">내 블로그</span> : null}
+          </div>
+          <p>{profile.bio ?? "아직 소개글이 없습니다."}</p>
         </div>
       </div>
       <div className="blog-profile-card__stats">
@@ -21,12 +24,8 @@ export function BlogProfileCard({ profile }: BlogProfileCardProps) {
           <span>게시글</span>
         </div>
         <div>
-          <strong>{profile.followerCount}</strong>
-          <span>구독자</span>
-        </div>
-        <div>
-          <strong>{profile.todayVisitorCount}</strong>
-          <span>오늘 방문</span>
+          <strong>{profile.displayName}</strong>
+          <span>작성자</span>
         </div>
       </div>
     </section>
