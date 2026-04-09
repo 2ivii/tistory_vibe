@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { buildMyBlogProfile, getBlogProfile } from "../api/blogApi";
+import { getBlogProfile, subscribeToUser, unsubscribeFromUser } from "../api/blogApi";
 import { getPosts } from "../api/posts";
 import { BlogProfileCard } from "../components/BlogProfileCard";
 import { PostListItem } from "../components/PostListItem";
@@ -16,34 +16,33 @@ export function UserBlogPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<BlogProfile | null>(null);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+  const [subscriptionError, setSubscriptionError] = useState<string | null>(null);
 
   usePageTitle(profile ? profile.blogTitle : `${username} 블로그`);
 
   useEffect(() => {
     let active = true;
 
-    async function loadPosts() {
+    async function loadBlogPage() {
       try {
         setLoading(true);
         setError(null);
-        const response = await getPosts({ blogUsername: username, page: 0, size: 20 });
+        setSubscriptionError(null);
+        const [profileResponse, postsResponse] = await Promise.all([
+          getBlogProfile(username),
+          getPosts({ blogUsername: username, page: 0, size: 20 })
+        ]);
 
         if (active) {
-          setPosts(response.content);
-          if (session.user?.blogUsername === username) {
-            setProfile(buildMyBlogProfile(session.user, response.totalElements));
-          } else {
-            setProfile(getBlogProfile(username, response.totalElements) ?? null);
-          }
+          setProfile(profileResponse);
+          setPosts(postsResponse.content);
         }
       } catch (loadError) {
         if (active) {
           setError(loadError instanceof Error ? loadError.message : "게시글을 불러오지 못했습니다.");
-          if (session.user?.blogUsername === username) {
-            setProfile(buildMyBlogProfile(session.user));
-          } else {
-            setProfile(getBlogProfile(username) ?? null);
-          }
+          setProfile(null);
+          setPosts([]);
         }
       } finally {
         if (active) {
@@ -52,16 +51,67 @@ export function UserBlogPage() {
       }
     }
 
-    void loadPosts();
+    void loadBlogPage();
 
     return () => {
       active = false;
     };
-  }, [session.user, username]);
+  }, [username]);
+
+  async function handleToggleSubscription() {
+    if (!profile || profile.isOwner || subscriptionLoading) {
+      return;
+    }
+
+    if (!session.isLoggedIn) {
+      setSubscriptionError("로그인 후 구독할 수 있습니다.");
+      return;
+    }
+
+    const previousProfile = profile;
+    const nextSubscribed = !profile.subscribedByMe;
+    const nextSubscriberCount = Math.max(0, profile.subscriberCount + (nextSubscribed ? 1 : -1));
+
+    setSubscriptionLoading(true);
+    setSubscriptionError(null);
+    setProfile({
+      ...profile,
+      subscribedByMe: nextSubscribed,
+      subscriberCount: nextSubscriberCount
+    });
+
+    try {
+      const response = profile.subscribedByMe
+        ? await unsubscribeFromUser(profile.userId)
+        : await subscribeToUser(profile.userId);
+
+      setProfile((currentProfile) =>
+        currentProfile
+          ? {
+              ...currentProfile,
+              subscribedByMe: response.subscribed,
+              subscriberCount: response.subscriberCount
+            }
+          : currentProfile
+      );
+    } catch (toggleError) {
+      setProfile(previousProfile);
+      setSubscriptionError(toggleError instanceof Error ? toggleError.message : "구독 상태를 변경하지 못했습니다.");
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  }
 
   return (
     <div className="container page-stack">
-      {profile ? <BlogProfileCard profile={profile} /> : null}
+      {profile ? (
+        <BlogProfileCard
+          profile={profile}
+          subscriptionLoading={subscriptionLoading}
+          subscriptionError={subscriptionError}
+          onToggleSubscription={handleToggleSubscription}
+        />
+      ) : null}
 
       <section className="section-stack card blog-posts-card">
         <div className="section-heading">
