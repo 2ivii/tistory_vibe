@@ -1,5 +1,6 @@
 package com.vibe.vibebe.post.service;
 
+import com.vibe.vibebe.comment.service.CommentService;
 import com.vibe.vibebe.global.exception.BusinessException;
 import com.vibe.vibebe.global.security.CustomUserDetails;
 import com.vibe.vibebe.post.domain.Post;
@@ -24,6 +25,7 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final CommentService commentService;
 
     @Transactional
     public PostDetailResponse createPost(CustomUserDetails userDetails, PostCreateRequest request) {
@@ -72,6 +74,7 @@ public class PostService {
     public void deletePost(Long postId, CustomUserDetails userDetails) {
         Post post = getPostEntity(postId);
         validateAuthor(post, userDetails.getUserId());
+        commentService.deleteCommentsByPostId(postId);
         postRepository.delete(post);
     }
 

@@ -44,4 +44,8 @@ public class Comment extends BaseEntity {
         this.author = author;
         this.content = content;
     }
+
+    public boolean isAuthor(Long userId) {
+        return author != null && author.getId().equals(userId);
+    }
 }

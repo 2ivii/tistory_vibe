@@ -69,6 +69,16 @@ public class Post extends BaseEntity {
         this.content = content;
     }
 
+    public void increaseCommentCount() {
+        this.commentCount++;
+    }
+
+    public void decreaseCommentCount() {
+        if (this.commentCount > 0) {
+            this.commentCount--;
+        }
+    }
+
     public boolean isAuthor(Long userId) {
         return author != null && author.getId().equals(userId);
     }
