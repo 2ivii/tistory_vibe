@@ -1,11 +1,48 @@
-import { getPosts } from "../api/postApi";
+import { useEffect, useState } from "react";
+import { getPosts } from "../api/posts";
 import { PageIntro } from "../components/PageIntro";
 import { PostListItem } from "../components/PostListItem";
 import { usePageTitle } from "../hooks/usePageTitle";
+import type { PostPage } from "../types/post";
 
 export function PostListPage() {
   usePageTitle("글 목록");
-  const posts = getPosts();
+
+  const [pageData, setPageData] = useState<PostPage | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadPosts() {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await getPosts({ page: 0, size: 10 });
+
+        if (active) {
+          setPageData(response);
+        }
+      } catch (loadError) {
+        if (active) {
+          setError(loadError instanceof Error ? loadError.message : "게시글 목록을 불러오지 못했습니다.");
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadPosts();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const posts = pageData?.content ?? [];
 
   return (
     <div className="container page-stack">
@@ -18,28 +55,28 @@ export function PostListPage() {
       <div className="content-with-sidebar">
         <section className="section-stack">
           <section className="toolbar card">
-            <span>전체 {posts.length}개 글</span>
+            <span>전체 {pageData?.totalElements ?? 0}개 글</span>
             <div className="toolbar-actions">
               <span>정렬: 최신순</span>
-              <span>필터: 전체</span>
+              <span>페이지: {(pageData?.page ?? 0) + 1}</span>
             </div>
           </section>
 
           <section className="post-list">
-            {posts.map((post) => (
-              <PostListItem key={post.id} post={post} />
-            ))}
+            {loading ? <div className="card">글 목록을 불러오는 중입니다.</div> : null}
+            {error ? <div className="card">{error}</div> : null}
+            {!loading && !error && posts.length === 0 ? <div className="card">아직 작성된 게시글이 없습니다.</div> : null}
+            {!loading && !error ? posts.map((post) => <PostListItem key={post.id} post={post} />) : null}
           </section>
         </section>
 
         <aside className="sidebar-panel card">
           <p className="page-intro__eyebrow">Browse</p>
-          <h2>카테고리</h2>
+          <h2>안내</h2>
           <ul className="simple-list">
-            <li>프론트엔드</li>
-            <li>React</li>
-            <li>백엔드</li>
-            <li>UX</li>
+            <li>최신 글 기준으로 정렬됩니다.</li>
+            <li>백엔드 페이지 응답 구조와 연결되어 있습니다.</li>
+            <li>이후 검색과 정렬 조건을 자연스럽게 확장할 수 있습니다.</li>
           </ul>
         </aside>
       </div>

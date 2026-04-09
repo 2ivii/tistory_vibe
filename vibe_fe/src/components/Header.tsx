@@ -1,15 +1,16 @@
 import { NavLink, Link } from "react-router-dom";
-import { getMockSession } from "../api/authApi";
+import { logout } from "../api/authApi";
+import { useAuthSession } from "../hooks/useAuthSession";
 
 const navItems = [
   { to: "/", label: "홈", end: true },
   { to: "/posts", label: "피드" },
   { to: "/blog/minlog", label: "스킨" },
-  { to: "/posts/new", label: "포럼" },
+  { to: "/posts/new", label: "글쓰기" },
 ];
 
 export function Header() {
-  const session = getMockSession();
+  const session = useAuthSession();
 
   return (
     <header className="site-header">
@@ -42,9 +43,12 @@ export function Header() {
           </div>
           {session.isLoggedIn ? (
             <div className="user-menu">
-              <Link to={`/blog/${session.user.blogUsername}`} className="user-menu__profile">
-                <span>시작하기</span>
+              <Link to={`/blog/${session.user?.blogUsername ?? ""}`} className="user-menu__profile">
+                <span>{session.user?.nickname ?? "내 블로그"}</span>
               </Link>
+              <button type="button" className="button secondary" onClick={logout}>
+                로그아웃
+              </button>
             </div>
           ) : (
             <div className="auth-actions">

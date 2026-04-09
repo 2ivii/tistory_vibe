@@ -14,7 +14,7 @@ export function PostListItem({ post, rank, showThumbnail = false }: PostListItem
       {rank ? <div className="post-list-item__rank">{rank}</div> : null}
       <div className="post-list-item__body">
         <div className="post-list-item__meta">
-          <span>{post.category}</span>
+          <span>{post.authorNickname}</span>
           <span>{formatDate(post.createdAt)}</span>
         </div>
         <Link to={`/posts/${post.id}`} className="post-list-item__title">

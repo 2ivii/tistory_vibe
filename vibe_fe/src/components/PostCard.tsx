@@ -11,13 +11,13 @@ export function PostCard({ post, compact = false }: PostCardProps) {
   return (
     <article className={compact ? "post-card post-card--compact" : "post-card"}>
       <div className={`post-card__cover post-card__cover--${post.id}`}>
-        <span className="post-card__badge">{compact ? "오늘의 티스토리" : post.category}</span>
+        <span className="post-card__badge">{compact ? "오늘의 티스토리" : post.authorNickname}</span>
         <div className="post-card__overlay">
           <Link to={`/posts/${post.id}`} className="post-card__title">
             {post.title}
           </Link>
           <div className="post-card__meta">
-            <span>{post.authorDisplayName}</span>
+            <span>{post.authorNickname}</span>
             <span>{formatDate(post.createdAt)}</span>
           </div>
         </div>
